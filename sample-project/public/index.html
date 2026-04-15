@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sample App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #f5f5f5; }
+    .app { max-width: 800px; margin: 0 auto; padding: 2rem; }
+    nav { display: flex; gap: 1rem; margin-bottom: 2rem; padding: 1rem; background: #fff; border-radius: 8px; }
+    nav a { text-decoration: none; color: #333; padding: 0.5rem 1rem; border-radius: 4px; }
+    nav a:hover, nav a.active { background: #007bff; color: #fff; }
+    .page { display: none; background: #fff; padding: 2rem; border-radius: 8px; }
+    .page.active { display: block; }
+    .form-group { margin-bottom: 1rem; }
+    label { display: block; margin-bottom: 0.25rem; font-weight: 600; }
+    input[type="email"], input[type="password"], input[type="text"], input[type="number"] {
+      width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;
+    }
+    button { padding: 0.5rem 1.5rem; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .error { color: #dc3545; }
+    .success { color: #28a745; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .metric-card { background: #f8f9fa; padding: 1.5rem; border-radius: 8px; text-align: center; }
+    .metric-value { display: block; font-size: 2rem; font-weight: bold; color: #007bff; }
+    .metric-label { display: block; color: #666; margin-top: 0.25rem; }
+    .run-item { padding: 0.5rem; border-bottom: 1px solid #eee; }
+    .run-item.passed { border-left: 3px solid #28a745; padding-left: 0.75rem; }
+    .run-item.failed { border-left: 3px solid #dc3545; padding-left: 0.75rem; }
+    .setting-group { margin-bottom: 1rem; }
+    .search-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .search-bar input { flex: 1; }
+    .result-item { padding: 0.5rem; border-bottom: 1px solid #eee; }
+    .result-item.passed { color: #28a745; }
+    .result-item.failed { color: #dc3545; }
+    .empty-state { color: #999; font-style: italic; }
+    #runs-list { list-style: none; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav id="nav">
+      <a href="#login" data-page="login">Login</a>
+      <a href="#dashboard" data-page="dashboard">Dashboard</a>
+      <a href="#settings" data-page="settings">Settings</a>
+      <a href="#search" data-page="search">Search</a>
+    </nav>
+    <div id="page-login" class="page active"></div>
+    <div id="page-dashboard" class="page"></div>
+    <div id="page-settings" class="page"></div>
+    <div id="page-search" class="page"></div>
+  </div>
+
+  <script type="module">
+    import { createLoginForm } from '../src/components/login-form.js';
+    import { createDashboard } from '../src/components/dashboard.js';
+    import { createSettingsPanel } from '../src/components/settings-panel.js';
+    import { createSearchPage } from '../src/pages/search.js';
+
+    const pages = {
+      login: { init: createLoginForm, el: document.getElementById('page-login') },
+      dashboard: { init: createDashboard, el: document.getElementById('page-dashboard') },
+      settings: { init: createSettingsPanel, el: document.getElementById('page-settings') },
+      search: { init: createSearchPage, el: document.getElementById('page-search') },
+    };
+
+    // Initialize all pages
+    Object.values(pages).forEach(p => p.init(p.el));
+
+    // Simple hash router
+    function navigate() {
+      const page = (window.location.hash || '#login').slice(1);
+      document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      const target = document.getElementById(`page-${page}`);
+      const link = document.querySelector(`nav a[data-page="${page}"]`);
+      if (target) target.classList.add('active');
+      if (link) link.classList.add('active');
+    }
+
+    window.addEventListener('hashchange', navigate);
+    navigate();
+  </script>
+</body>
+</html>
