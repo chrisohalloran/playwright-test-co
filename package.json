@@ -4,7 +4,7 @@
   "description": "Run only the Playwright tests affected by your PR changes",
   "type": "module",
   "bin": {
-    "ptc": "./src/cli.js"
+    "ptc": "src/cli.js"
   },
   "files": [
     "src/"
@@ -13,7 +13,15 @@
     "ptc": "node src/cli.js",
     "demo": "node src/cli.js --project sample-project --files sample-project/src/components/login-form.js"
   },
-  "keywords": ["playwright", "testing", "e2e", "targeted", "ci", "diff", "pr"],
+  "keywords": [
+    "playwright",
+    "testing",
+    "e2e",
+    "targeted",
+    "ci",
+    "diff",
+    "pr"
+  ],
   "author": "Chris O'Halloran",
   "license": "MIT",
   "repository": {
