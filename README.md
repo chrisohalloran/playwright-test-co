@@ -33,14 +33,16 @@ Running 1 targeted test file(s)... (skipping ~4 unaffected)
 ✓ All targeted tests passed (2.5s, 1/5 test files)
 ```
 
-## Quick Start
+## Install
 
 ```bash
-# Clone and use directly (no install needed — pure Node.js, no build step)
-git clone <repo-url> && cd playwright-test-co
+npm install -g playwright-test-co
+```
 
-# Point it at your Playwright project with changed files
-node src/cli.js --project /path/to/your/app --files "src/login.js,src/auth.js"
+Or use directly with npx — no install needed:
+
+```bash
+npx playwright-test-co --help
 ```
 
 ## Usage
@@ -67,17 +69,39 @@ ptc --project <dir> --stdin                     Read file list from stdin
 
 ```bash
 # After fixing a specific component
-node src/cli.js -p ./my-app -f src/components/login-form.js
+ptc -p ./my-app -f src/components/login-form.js
 
-# Pipe git diff directly
-git diff main... | node src/cli.js -p ./my-app --stdin
+# Pipe git diff directly (the killer CI feature)
+git diff main... | ptc -p ./my-app --stdin
 
 # Auto-detect changes on your branch
-node src/cli.js -p ./my-app --git-base main
+ptc -p ./my-app --git-base main
 
 # Preview which tests would run (no execution)
-node src/cli.js -p ./my-app -f src/api/auth.js --dry-run
+ptc -p ./my-app -f src/api/auth.js --dry-run
 ```
+
+## CI Integration
+
+The stdin piping mode makes `ptc` a drop-in for CI pipelines. Pipe your PR diff and only the affected tests run:
+
+### GitHub Actions
+
+```yaml
+- name: Run affected Playwright tests
+  run: |
+    npx playwright install --with-deps
+    git diff origin/main...HEAD --name-only | npx playwright-test-co -p . --stdin
+```
+
+### Generic CI
+
+```bash
+# Get changed files from your PR and pipe to ptc
+git diff $BASE_BRANCH...HEAD --name-only | ptc -p . --stdin
+```
+
+This replaces a full `npx playwright test` run with a targeted one — same confidence, fraction of the time.
 
 ## How It Maps Changes to Tests
 
@@ -87,24 +111,14 @@ Three heuristics, applied in priority order:
 
 2. **Name matching** — Fuzzy matches file stems: `login-form.js` maps to `login.spec.ts`. Catches convention-based test organization.
 
-3. **Content reference** — Searches test file content for mentions of the changed module name. Catches indirect dependencies (e.g., a login test that navigates to the dashboard).
+3. **Content reference** — Searches test file content for mentions of the changed module name. Catches indirect dependencies.
 
-## Demo
-
-The repo includes a sample project to try it against:
-
-```bash
-# Run with a simulated login change
-node src/cli.js -p sample-project -f "src/components/login-form.js"
-
-# Run with multiple changes
-node src/cli.js -p sample-project -f "src/components/dashboard.js,src/pages/search.js"
-
-# Dry run to see mapping without execution
-node src/cli.js -p sample-project -f "src/components/settings-panel.js" --dry-run
-```
-
-## Requirements
+## Prerequisites
 
 - Node.js 18+
-- The target project must have Playwright installed and configured
+- The target project must have [Playwright](https://playwright.dev/) installed and configured
+- Run `npx playwright install` in your target project if browsers aren't set up yet
+
+## License
+
+MIT

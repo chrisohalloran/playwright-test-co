@@ -6,10 +6,22 @@
   "bin": {
     "ptc": "./src/cli.js"
   },
+  "files": [
+    "src/"
+  ],
   "scripts": {
     "ptc": "node src/cli.js",
     "demo": "node src/cli.js --project sample-project --files sample-project/src/components/login-form.js"
   },
-  "keywords": ["playwright", "testing", "e2e", "targeted", "ci"],
-  "license": "MIT"
+  "keywords": ["playwright", "testing", "e2e", "targeted", "ci", "diff", "pr"],
+  "author": "Chris O'Halloran",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrisohalloran/playwright-test-co.git"
+  },
+  "homepage": "https://github.com/chrisohalloran/playwright-test-co",
+  "engines": {
+    "node": ">=18"
+  }
 }
