@@ -29,7 +29,7 @@
     "type": "git",
     "url": "git+https://github.com/chrisohalloran/playwright-test-co.git"
   },
-  "homepage": "https://github.com/chrisohalloran/playwright-test-co",
+  "homepage": "https://chrisohalloran.github.io/playwright-test-co/",
   "engines": {
     "node": ">=18"
   }

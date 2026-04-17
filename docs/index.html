@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playwright Test Co — Targeted E2E Testing for PRs</title>
+  <meta name="description" content="Run only the Playwright tests affected by your PR changes. Stop re-running the full E2E suite after every fix.">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3a;
+      --text: #e4e4e7;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --accent-dim: #16a34a;
+      --code-bg: #12141c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+    header {
+      padding: 48px 0 32px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    header h1 span { color: var(--accent); }
+    header p {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .hero-terminal {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin: 32px 0 48px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .hero-terminal .prompt { color: var(--accent); }
+    .hero-terminal .dim { color: var(--muted); }
+    .hero-terminal .highlight { color: #facc15; }
+    .hero-terminal .pass { color: var(--accent); }
+
+    section { margin-bottom: 48px; }
+    section h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      letter-spacing: -0.01em;
+    }
+    section p {
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    @media (max-width: 540px) { .features { grid-template-columns: 1fr; } }
+    .feature {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .feature h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .feature p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .install-block {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      overflow-x: auto;
+    }
+    .install-block .label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .cta {
+      text-align: center;
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+    }
+    .cta h2 { margin-bottom: 8px; }
+    .cta p { margin-bottom: 24px; }
+    .btn {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--bg);
+      padding: 12px 32px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--accent-dim); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      margin-left: 12px;
+    }
+    .btn-outline:hover { border-color: var(--muted); background: var(--surface); }
+
+    footer {
+      text-align: center;
+      padding: 32px 0;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><span>ptc</span> — Playwright Test Co</h1>
+      <p>Run only the Playwright tests affected by your PR changes. Full confidence, fraction of the time.</p>
+    </header>
+
+    <div class="hero-terminal">
+      <span class="prompt">$</span> ptc -p ./my-app -f src/components/login-form.js<br><br>
+      <span class="dim">⚡ Playwright Test Co — targeted E2E testing</span><br><br>
+      <span class="dim">Changed files detected:</span><br>
+      &nbsp;&nbsp;• src/components/login-form.js<br><br>
+      <span class="dim">Matched tests:</span><br>
+      &nbsp;&nbsp;• tests/login.spec.ts &nbsp;<span class="highlight">[import]</span> ← src/components/login-form.js<br><br>
+      <span class="dim">Running 1 targeted test file(s)... (skipping ~4 unaffected)</span><br><br>
+      &nbsp;&nbsp;<span class="pass">✓</span> shows login form with email and password fields <span class="dim">(240ms)</span><br>
+      &nbsp;&nbsp;<span class="pass">✓</span> requires email field to be filled <span class="dim">(129ms)</span><br>
+      &nbsp;&nbsp;<span class="pass">✓</span> shows error for short password <span class="dim">(94ms)</span><br>
+      &nbsp;&nbsp;<span class="pass">✓</span> navigates to dashboard on successful login <span class="dim">(588ms)</span><br><br>
+      &nbsp;&nbsp;<span class="pass">4 passed</span> <span class="dim">(1.7s)</span><br><br>
+      <span class="pass">✓ All targeted tests passed</span> <span class="dim">(2.5s, 1/5 test files)</span>
+    </div>
+
+    <section>
+      <h2>Why targeted testing?</h2>
+      <p>You fix a component in your PR. Your full E2E suite takes 10+ minutes. You only changed one file. Why run everything?</p>
+      <p><strong>ptc</strong> analyzes which files changed, maps them to the Playwright tests that exercise those areas, and runs only those tests.</p>
+      <div class="features">
+        <div class="feature">
+          <h3>Import tracing</h3>
+          <p>Parses test files for imports that reference your changed source files.</p>
+        </div>
+        <div class="feature">
+          <h3>Name matching</h3>
+          <p>Fuzzy matches file stems: login-form.js maps to login.spec.ts.</p>
+        </div>
+        <div class="feature">
+          <h3>Content reference</h3>
+          <p>Searches test content for mentions of changed modules.</p>
+        </div>
+        <div class="feature">
+          <h3>CI-native</h3>
+          <p>Pipe git diff directly. Works with any CI. GitHub Action included.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Install</h2>
+      <div class="install-block">
+        <span class="label">npm (global)</span>
+        npm install -g playwright-test-co
+      </div>
+      <div class="install-block">
+        <span class="label">npx (no install)</span>
+        npx playwright-test-co -p ./my-app --git-base main
+      </div>
+      <div class="install-block">
+        <span class="label">GitHub Action</span>
+        - uses: chrisohalloran/playwright-test-co@v1
+      </div>
+    </section>
+
+    <section>
+      <h2>GitHub Action — one line</h2>
+      <p>Add targeted Playwright testing to any PR workflow:</p>
+      <div class="install-block">
+        <span class="label">workflow</span>
+        name: Targeted E2E Tests<br>
+        on: pull_request<br>
+        jobs:<br>
+        &nbsp;&nbsp;test:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;runs-on: ubuntu-latest<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;steps:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: actions/checkout@v4<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: actions/setup-node@v4<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- run: npm ci<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- uses: chrisohalloran/playwright-test-co@v1
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Stay in the loop</h2>
+      <p>Get notified about new features, GitHub Action updates, and CI integration guides.</p>
+      <form id="signup-form" style="max-width: 400px; margin: 0 auto 24px; display: flex; gap: 8px;">
+        <input type="email" id="signup-email" placeholder="you@company.com" required
+          style="flex: 1; padding: 12px 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 1rem; outline: none;">
+        <button type="submit" class="btn" style="border: none; cursor: pointer; white-space: nowrap;">Sign up</button>
+      </form>
+      <p id="signup-msg" style="display: none; color: var(--accent); font-size: 0.875rem;"></p>
+      <div style="margin-top: 16px;">
+        <a href="https://github.com/chrisohalloran/playwright-test-co" class="btn">View on GitHub</a>
+        <a href="https://github.com/chrisohalloran/playwright-test-co#usage" class="btn btn-outline">Read the docs</a>
+      </div>
+    </section>
+
+    <script>
+      document.getElementById('signup-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var email = document.getElementById('signup-email').value;
+        var msg = document.getElementById('signup-msg');
+        this.querySelector('button').disabled = true;
+        this.querySelector('button').textContent = 'Sending...';
+        fetch('https://formspree.io/f/xledegjy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email: email })
+        }).then(function(r) {
+          if (r.ok) {
+            msg.textContent = 'You\'re on the list! We\'ll be in touch.';
+            msg.style.display = 'block';
+            e.target.style.display = 'none';
+          } else {
+            msg.textContent = 'Something went wrong. Try again or star the repo instead.';
+            msg.style.color = '#ef4444';
+            msg.style.display = 'block';
+            e.target.querySelector('button').disabled = false;
+            e.target.querySelector('button').textContent = 'Sign up';
+          }
+        }).catch(function() {
+          msg.textContent = 'Network error. Try again later.';
+          msg.style.color = '#ef4444';
+          msg.style.display = 'block';
+          e.target.querySelector('button').disabled = false;
+          e.target.querySelector('button').textContent = 'Sign up';
+        });
+      });
+    </script>
+
+    <footer>
+      <p>MIT License · Built by <a href="https://github.com/chrisohalloran">Chris O'Halloran</a></p>
+    </footer>
+  </div>
+</body>
+</html>
