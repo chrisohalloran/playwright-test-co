@@ -1,0 +1,122 @@
+name: 'Playwright Test Co'
+description: 'Run only the Playwright tests affected by PR changes — targeted E2E testing'
+branding:
+  icon: 'zap'
+  color: 'purple'
+
+inputs:
+  project-path:
+    description: 'Path to the Playwright project directory'
+    required: false
+    default: '.'
+  install-browsers:
+    description: 'Whether to install Playwright browsers'
+    required: false
+    default: 'true'
+  dry-run:
+    description: 'Show matched tests without running them'
+    required: false
+    default: 'false'
+  base-ref:
+    description: 'Base branch/ref for diff comparison (auto-detected from PR context)'
+    required: false
+    default: ''
+
+outputs:
+  tests-found:
+    description: 'Number of test files matched to changes'
+    value: ${{ steps.run.outputs.tests-found }}
+  tests-passed:
+    description: 'Whether all targeted tests passed'
+    value: ${{ steps.run.outputs.tests-passed }}
+  summary:
+    description: 'Human-readable result summary'
+    value: ${{ steps.run.outputs.summary }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Playwright browsers
+      if: inputs.install-browsers == 'true'
+      shell: bash
+      working-directory: ${{ inputs.project-path }}
+      run: npx playwright install --with-deps
+
+    - name: Get changed files and run targeted tests
+      id: run
+      shell: bash
+      env:
+        INPUT_PROJECT_PATH: ${{ inputs.project-path }}
+        INPUT_DRY_RUN: ${{ inputs.dry-run }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: |
+        set -euo pipefail
+
+        # Determine base ref for diff
+        if [ -n "$INPUT_BASE_REF" ]; then
+          BASE_REF="$INPUT_BASE_REF"
+        elif [ "$GITHUB_EVENT_NAME" = "pull_request" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_target" ]; then
+          BASE_REF="$PR_BASE_SHA"
+        else
+          BASE_REF="HEAD~1"
+        fi
+
+        echo "::group::Detecting changed files (base: $BASE_REF)"
+        CHANGED_FILES=$(git diff --name-only "$BASE_REF"...HEAD 2>/dev/null || git diff --name-only "$BASE_REF" HEAD)
+        echo "$CHANGED_FILES"
+        echo "::endgroup::"
+
+        if [ -z "$CHANGED_FILES" ]; then
+          echo "No changed files detected. Skipping tests."
+          echo "tests-found=0" >> "$GITHUB_OUTPUT"
+          echo "tests-passed=true" >> "$GITHUB_OUTPUT"
+          echo "summary=No changed files detected — no tests to run" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # Build CLI args
+        CLI_ARGS="-p $INPUT_PROJECT_PATH --stdin"
+        if [ "$INPUT_DRY_RUN" = "true" ]; then
+          CLI_ARGS="$CLI_ARGS --dry-run"
+        fi
+
+        # Run playwright-test-co via the bundled CLI
+        set +eo pipefail
+        echo "$CHANGED_FILES" | node "${{ github.action_path }}/src/cli.js" $CLI_ARGS 2>&1 | tee /tmp/ptc-output.txt
+        EXIT_CODE=${PIPESTATUS[1]}
+        set -eo pipefail
+
+        # Parse results for outputs
+        TESTS_FOUND=$(grep -c "•" /tmp/ptc-output.txt 2>/dev/null || echo "0")
+        if [ $EXIT_CODE -eq 0 ]; then
+          echo "tests-passed=true" >> "$GITHUB_OUTPUT"
+          SUMMARY="All targeted tests passed"
+        else
+          echo "tests-passed=false" >> "$GITHUB_OUTPUT"
+          SUMMARY="Some targeted tests failed"
+        fi
+        echo "tests-found=$TESTS_FOUND" >> "$GITHUB_OUTPUT"
+        echo "summary=$SUMMARY" >> "$GITHUB_OUTPUT"
+
+        # Write job summary
+        {
+          echo "## Playwright Test Co Results"
+          echo ""
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo ":white_check_mark: **$SUMMARY**"
+          else
+            echo ":x: **$SUMMARY**"
+          fi
+          echo ""
+          echo "<details><summary>Full output</summary>"
+          echo ""
+          echo '```'
+          cat /tmp/ptc-output.txt
+          echo '```'
+          echo "</details>"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        exit $EXIT_CODE

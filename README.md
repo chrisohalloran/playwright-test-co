@@ -97,11 +97,64 @@ ptc -p ./my-app --git-base main
 ptc -p ./my-app -f src/api/auth.js --dry-run
 ```
 
-## CI Integration
+## GitHub Action
 
-The stdin piping mode makes `ptc` a drop-in for CI pipelines. Pipe your PR diff and only the affected tests run:
+Add targeted Playwright testing to any PR workflow with one line:
 
-### GitHub Actions
+```yaml
+# .github/workflows/playwright-targeted.yml
+name: Targeted E2E Tests
+on: pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - uses: chrisohalloran/playwright-test-co@v1
+```
+
+That's it. The action auto-detects which files changed in the PR, maps them to Playwright tests, runs only those tests, and reports results as a PR check with a summary.
+
+### Action Inputs
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `project-path` | `.` | Path to the Playwright project directory |
+| `install-browsers` | `true` | Install Playwright browsers before running |
+| `dry-run` | `false` | Show matched tests without running them |
+| `base-ref` | (auto) | Base ref for diff (auto-detected from PR context) |
+
+### Action Outputs
+
+| Output | Description |
+|--------|-------------|
+| `tests-found` | Number of test files matched to changes |
+| `tests-passed` | Whether all targeted tests passed (`true`/`false`) |
+| `summary` | Human-readable result summary |
+
+### Advanced: Conditional Steps
+
+```yaml
+- uses: chrisohalloran/playwright-test-co@v1
+  id: targeted-tests
+
+- name: Full suite fallback
+  if: steps.targeted-tests.outputs.tests-found == '0'
+  run: npx playwright test
+```
+
+## CI Integration (CLI)
+
+The stdin piping mode makes `ptc` a drop-in for CI pipelines without the Action:
+
+### GitHub Actions (CLI)
 
 ```yaml
 - name: Run affected Playwright tests
@@ -113,7 +166,6 @@ The stdin piping mode makes `ptc` a drop-in for CI pipelines. Pipe your PR diff 
 ### Generic CI
 
 ```bash
-# Get changed files from your PR and pipe to ptc
 git diff $BASE_BRANCH...HEAD --name-only | ptc -p . --stdin
 ```
 
