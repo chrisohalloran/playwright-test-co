@@ -35,15 +35,31 @@ Running 1 targeted test file(s)... (skipping ~4 unaffected)
 
 ## Install
 
+Install directly from GitHub:
+
 ```bash
-npm install -g playwright-test-co
+npm install -g github:chrisohalloran/playwright-test-co
 ```
 
 Or use directly with npx — no install needed:
 
 ```bash
-npx playwright-test-co --help
+npx github:chrisohalloran/playwright-test-co --help
 ```
+
+<details>
+<summary>Other install methods</summary>
+
+From npm registry (when available):
+```bash
+npm install -g playwright-test-co
+```
+
+From a specific branch or tag:
+```bash
+npm install -g github:chrisohalloran/playwright-test-co#main
+```
+</details>
 
 ## Usage
 
@@ -91,7 +107,7 @@ The stdin piping mode makes `ptc` a drop-in for CI pipelines. Pipe your PR diff 
 - name: Run affected Playwright tests
   run: |
     npx playwright install --with-deps
-    git diff origin/main...HEAD --name-only | npx playwright-test-co -p . --stdin
+    git diff origin/main...HEAD --name-only | npx github:chrisohalloran/playwright-test-co -p . --stdin
 ```
 
 ### Generic CI

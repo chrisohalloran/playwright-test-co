@@ -4,6 +4,7 @@
   "description": "Run only the Playwright tests affected by your PR changes",
   "type": "module",
   "bin": {
+    "playwright-test-co": "src/cli.js",
     "ptc": "src/cli.js"
   },
   "files": [
